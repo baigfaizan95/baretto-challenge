@@ -41,7 +41,7 @@ const Post = ({
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       if (!id) {
-        navigation.goBack();
+        navigateBack();
       } else {
         fetchPost(id);
         fetchComments(id);
@@ -49,6 +49,7 @@ const Post = ({
     });
     return unsubscribe;
   }, []);
+
   const navigateBack = () => {
     navigation.goBack();
   };
