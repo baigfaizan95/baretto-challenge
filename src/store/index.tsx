@@ -14,8 +14,6 @@ const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 const middleware = applyMiddleware(PromiseMiddleware, Thunk);
 
-export default () => {
-  let store = createStore(persistedReducer, middleware);
-  let persistor = persistStore(store);
-  return { store, persistor };
-};
+let store = createStore(persistedReducer, middleware);
+let persistor = persistStore(store);
+export default { store, persistor };

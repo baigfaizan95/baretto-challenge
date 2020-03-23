@@ -1,12 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useLayoutEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Divider,
   Icon,
-  Layout,
   Text,
   TopNavigation,
-  TopNavigationAction
+  TopNavigationAction,
+  Layout
 } from '@ui-kitten/components';
 import { createErrorMessageSelector, createLoadingSelector } from '../../utils';
 import {
@@ -16,6 +16,13 @@ import {
   fetchComments
 } from '../../actions/posts';
 import { connect } from 'react-redux';
+import { StyleSheet, Alert } from 'react-native';
+import LoadingPost from '../../components/LoadingPost';
+import { ScrollView } from 'react-native-gesture-handler';
+import { IPostComment } from '../../interfaces/posts';
+import CommentCard from '../../components/CommentCard';
+import SinglePost from '../../components/SinglePost';
+import { alert } from '../../actions/app';
 
 const BackIcon = style => <Icon {...style} name='arrow-back' />;
 
@@ -25,9 +32,10 @@ const Post = ({
   post,
   comments,
   loading,
-  error,
   fetchPost,
-  fetchComments
+  fetchComments,
+  error,
+  alert
 }) => {
   const id = route.params?.id;
   useEffect(() => {
@@ -45,31 +53,67 @@ const Post = ({
     navigation.goBack();
   };
 
+  useLayoutEffect(() => {
+    if (error[FETCH_POST]) {
+      alert({
+        title: 'Error',
+        message: 'failed to fetch post',
+        error: FETCH_POST
+      });
+      return navigation.navigate('Home');
+    }
+  }, [error]);
+
   const BackAction = () => (
     <TopNavigationAction icon={BackIcon} onPress={navigateBack} />
   );
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <TopNavigation
-        title='MyApp'
-        alignment='center'
-        leftControl={BackAction()}
-      />
+      <TopNavigation leftControl={BackAction()} />
       <Divider />
-      <Layout
-        style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-      >
-        <Text category='h1'>POST</Text>
-      </Layout>
+      {loading || !post.title ? (
+        <LoadingPost />
+      ) : (
+        <ScrollView style={styles.container}>
+          <SinglePost title={post.title} body={post.body} />
+          {comments.length > 0 && (
+            <Text style={styles.commentTitle}>Comments</Text>
+          )}
+          <Divider />
+          <Layout>
+            {comments.map((comment: IPostComment, index) => (
+              <CommentCard
+                length={comments.length}
+                index={index}
+                key={index}
+                name={comment.name}
+                email={comment.email}
+                body={comment.body}
+              />
+            ))}
+          </Layout>
+          <Divider />
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
 
-const errorSelector = createErrorMessageSelector([
-  FETCH_POST,
-  FETCH_POST_COMMENTS
-]);
+const styles = StyleSheet.create({
+  commentTitle: {
+    paddingLeft: 20,
+    paddingBottom: 10,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#ff9999'
+  },
+  container: {
+    flex: 1
+  }
+});
+
+const errorSelector = createErrorMessageSelector([FETCH_POST]);
 const loadingSelector = createLoadingSelector([
   FETCH_POST,
   FETCH_POST_COMMENTS
@@ -84,4 +128,4 @@ const mapState = ({ posts: { post, comments }, loading, error }) => {
   };
 };
 
-export default connect(mapState, { fetchPost, fetchComments })(Post);
+export default connect(mapState, { fetchPost, fetchComments, alert })(Post);

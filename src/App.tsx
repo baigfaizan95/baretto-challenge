@@ -1,4 +1,4 @@
-import React, { Fragment, useLayoutEffect } from 'react';
+import React, { Fragment } from 'react';
 import { ApplicationProvider, IconRegistry } from '@ui-kitten/components';
 import { mapping, light as lightTheme } from '@eva-design/eva';
 import AppNavigator from './navigator';
